@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flight Results</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f7fa;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .flight-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .flight-section {
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+    .flight-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .flight-header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #2a3d66;
+    }
+    .flight-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 16px;
+        margin-bottom: 4px;
+    }
+    .airport {
+        font-weight: bold;
+        font-size: 18px;
+    }
+    .time {
+        color: #555;
+    }
+    .price {
+        text-align: right;
+        font-size: 20px;
+        font-weight: bold;
+        color: #1a73e8;
+    }
+    .city-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #2a3d66;
+        margin-bottom: 10px;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+        gap: 8px;
+    }
+    .page-link {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #1a73e8;
+    }
+    .page-link:hover {
+        background-color: #f0f0f0;
+    }
+    .page-link.active {
+        background-color: #1a73e8;
+        color: white;
+        border-color: #1a73e8;
+    }
+    .page-link.disabled {
+        color: #aaa;
+        pointer-events: none;
+    }
+    .empty-state{
+    max-width: 560px; margin: 6rem auto; text-align:center;
+    padding: 2rem; border: 1px solid #e5e7eb; border-radius: 1rem; background:#fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  }
+  .empty-icon{ font-size: 2.25rem; margin-bottom: .5rem; }
+  .empty-state h2{ margin: .25rem 0 .5rem; font-size: 1.5rem; }
+  .empty-state p{ color:#6b7280; margin-bottom: 1.25rem; }
+  .empty-actions{ display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+  .btn{
+    display:inline-block; padding:.6rem 1rem; border-radius:.75rem; text-decoration:none;
+    background:#111827; color:#fff; font-weight:600;
+  }
+  .btn:hover{ opacity:.92; }
+  .btn-secondary{ background:#e5e7eb; color:#111827; }
+  .btn-secondary:hover{ background:#d1d5db; }
+</style>
+</head>
+<body>
+
+<h1>Flight Results</h1>
+{% if not results or results|length == 0 %}
+<div class="empty-state">
+  <div class="empty-icon">🛫</div>
+  <h2>No results found</h2>
+  <p>Try adjusting your filters — different dates, airports, or a higher budget.</p>
+  <div class="empty-actions">
+    <a href="{{ url_for('index') }}" class="btn">Back to search</a>
+  </div>
+</div>
+{% else %}
+
+{% for destination_name, data in results | sort_by_price %}
+<div class="flight-card">
+    <div class="city-name">{{ destination_name }}</div>
+    
+    <div class="flight-section">
+        <div class="flight-header">Outbound Flight</div>
+        <div class="flight-info">
+            <span class="airport">{{ data["departures"]["outbound"]["departureAirport"]["iataCode"] }}</span>
+            <span class="time">{{ data["departures"]["outbound"]["departureDate"] }}</span>
+        </div>
+        <div class="flight-info">
+            <span class="airport">{{ data["departures"]["outbound"]["arrivalAirport"]["iataCode"] }}</span>
+            <span class="time">{{ data["departures"]["outbound"]["arrivalDate"] }}</span>
+        </div>
+    </div>
+
+    <div class="flight-section">
+        <div class="flight-header">Return Flight</div>
+        <div class="flight-info">
+            <span class="airport">{{ data["returns"]["outbound"]["departureAirport"]["iataCode"] }}</span>
+            <span class="time">{{ data["returns"]["outbound"]["departureDate"] }}</span>
+        </div>
+        <div class="flight-info">
+            <span class="airport">{{ data["returns"]["outbound"]["arrivalAirport"]["iataCode"] }}</span>
+            <span class="time">{{ data["returns"]["outbound"]["arrivalDate"] }}</span>
+        </div>
+    </div>
+
+    <div class="price">GBP{{ data["price"] }}</div>
+</div>
+{% endfor %}
+{% endif %}
+{% if results|length > 0 %}
+
+
+<div class="pagination">
+    <a href="{{ url_for('index') }}" class="page-link">Homepage</a>
+    {% if page > 1 %}
+        <a href="{{ url_for('search', page=page-1) }}" class="page-link">Previous</a>
+    {% else %}
+        <span class="page-link disabled">Previous</span>
+    {% endif %}
+    
+    {% for p in range(1, total_pages+1) %}
+        <a href="{{ url_for('search', page=p) }}" class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+    
+    {% if page < total_pages %}
+        <a href="{{ url_for('search', page=page+1) }}" class="page-link">Next</a>
+    {% else %}
+        <span class="page-link disabled">Next</span>
+    {% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>
